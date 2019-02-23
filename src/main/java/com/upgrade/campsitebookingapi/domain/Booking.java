@@ -1,18 +1,20 @@
-package com.upgrade.campsitebookingapi.web.rest.dto;
+package com.upgrade.campsitebookingapi.domain;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.Min;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
-
-/**
- * A DTO for the Booking entity.
- */
-public class BookingDTO {
+@Entity
+@Table(name = "booking")
+public class Booking {
 	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
 	@NotNull
@@ -28,9 +30,9 @@ public class BookingDTO {
 	private LocalDate departureDate;
 	
 	@NotNull
-	@Min(1)
 	private int people;
-
+	
+	
 	public Long getId() {
 		return id;
 	}
@@ -55,11 +57,7 @@ public class BookingDTO {
 		this.fullName = fullName;
 	}
 
-	public String getArrivalDate() {
-		return arrivalDate.toString();
-	}
-	
-	public LocalDate getArrivalDateAsLocalDate() {
+	public LocalDate getArrivalDate() {
 		return arrivalDate;
 	}
 
@@ -67,12 +65,8 @@ public class BookingDTO {
 		this.arrivalDate = arrivalDate;
 	}
 
-	public LocalDate getDepartureDateAsLocalDate() {
+	public LocalDate getDepartureDate() {
 		return departureDate;
-	}
-	
-	public String getDepartureDate() {
-		return departureDate.toString();
 	}
 
 	public void setDepartureDate(LocalDate departureDate) {
@@ -89,13 +83,14 @@ public class BookingDTO {
 
 	@Override
 	public String toString() {
-		return "BookingDTO{"
+		return "Booking{"
 				+ "id: " + getId()
 				+ ", email: " + getEmail()
 				+ ", fullName: " + getFullName()
 				+ ", arrivalDate: " + getArrivalDate()
-				+ ", departureDate: " + getDepartureDateAsLocalDate()
+				+ ", departureDate: " + getDepartureDate()
 				+ ", people: " + getPeople() + "}";
 	}
+
 
 }

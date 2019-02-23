@@ -2,6 +2,8 @@ package com.upgrade.campsitebookingapi.web.rest;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,7 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.upgrade.campsitebookingapi.service.BookingService;
 import com.upgrade.campsitebookingapi.web.rest.dto.BookingDTO;
+import com.upgrade.campsitebookingapi.web.rest.mapper.BookingMapper;
+
+import javassist.NotFoundException;
 
 @RestController
 @RequestMapping("/api")
@@ -22,6 +28,17 @@ import com.upgrade.campsitebookingapi.web.rest.dto.BookingDTO;
 		maxAge = 3600,
 		exposedHeaders = {"current-page", "total-count", "total-items"})
 public class BookingResource {
+	
+	private final Logger log = LoggerFactory.getLogger(BookingResource.class);
+	
+	private BookingService bookingService;
+	
+	private BookingMapper bookingMapper;
+	
+	public BookingResource (BookingService bookingService, BookingMapper bookingMapper) {
+		this.bookingService = bookingService;
+		this.bookingMapper = bookingMapper;
+	}
 
     /**
      * POST  /bookings : Create a new booking.
@@ -31,9 +48,18 @@ public class BookingResource {
      * or with status 400 (Bad Request) if the bookingDTO is not valid
      */
 	@PostMapping("/bookings")
-	public ResponseEntity<BookingDTO> createBooking(@Valid @RequestBody BookingDTO bookingDTO) {
-		
-		return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+	public ResponseEntity<Object> createBooking(@Valid @RequestBody BookingDTO bookingDTO) {
+		log.debug("REST request to create Booking : {}", bookingDTO);
+		if (bookingDTO.getId() != null) {
+			return ResponseEntity.badRequest().body("A new booking cannot already have an ID");
+        }
+		try {
+			BookingDTO result = bookingMapper.toDto(bookingService.create(bookingDTO));
+			return ResponseEntity.status(HttpStatus.CREATED).body(result);			
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		}
 	}
 	
     /**
