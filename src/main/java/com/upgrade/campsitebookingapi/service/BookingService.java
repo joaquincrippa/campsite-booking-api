@@ -93,6 +93,33 @@ public class BookingService {
 	}
 	
 	/**
+	 * Cancel an existing booking and update the news in the availabilities of previous booking days. 
+	 * The existing booking must not be active (the arrivalDate has to be after today).
+	 * TODO To simplify the model the cancelled booking is physically deleted,
+	 * but it should be marked as "CANCELLED" using a field.
+	 * 
+	 * @param id the id of an existing entity
+	 */
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	public void cancel(Long bookingId) throws NotFoundException, IllegalArgumentException  {
+		Optional<Booking> optBooking = bookingRepository.findById(bookingId);
+		if(!optBooking.isPresent()) {
+			throw new NotFoundException("The booking does not exist");
+		}
+		/* Check if booking is not active */
+		Booking booking = optBooking.get();
+		if (booking.getArrivalDate().isBefore(LocalDate.now())) {
+			throw new IllegalArgumentException("The booking is active, so it can't be cancelled");
+		}
+		/* Find the availability for every days between arrival and departure date */
+		List <Availability> availabilities = availabilityRepository.findByDateBetween(
+				booking.getArrivalDate(), booking.getDepartureDate());
+		rollbackBooking(booking, availabilities);
+		availabilityRepository.saveAll(availabilities);
+		bookingRepository.deleteById(bookingId);
+	}
+	
+	/**
 	 * Check the following validations:
 	 * 1. departureDate must not be later than one year.
 	 * 2. departureDate has to be after arrivalDate.

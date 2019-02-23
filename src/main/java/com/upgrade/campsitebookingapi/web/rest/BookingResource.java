@@ -87,14 +87,25 @@ public class BookingResource {
 	}
 
     /**
-     * DELETE  /bookings/:id : cancel the "id" booking.
+     * DELETE  /bookings/:id : Cancel the "id" booking.
      *
      * @param id the id of the booking to cancel
      * @return the ResponseEntity with status 200 (OK)
+     * or with status 404 (Not Found) if the resource does not exist,
+     * or with status 400 (Bad Request) if the request couldn't be completed.
      */
 	@DeleteMapping("/bookings/{id}")
-	public ResponseEntity<BookingDTO> cancelBooking(@PathVariable Long id) {
-		return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-	}
-	
+	public ResponseEntity<Object> cancelBooking(@PathVariable Long id) {
+		log.debug("REST request to cancel Booking : {}", id);
+		try {
+			bookingService.cancel(id);
+			return ResponseEntity.ok().build();
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		} catch (NotFoundException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+	}	
 }

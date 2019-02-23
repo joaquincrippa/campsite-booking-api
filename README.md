@@ -7,7 +7,7 @@ REST API service to manage camping reservations
 * The time unit of booking is a day.
 * The minimum booking time is one day.
 * The maximum booking time is three days.
-* The campsite has capacity for 10 people. This value es parameterized.
+* The campsite has capacity for 10 people. This value is parameterized.
 * The booking date can not be longer than one year.
 
 For example: one day, two days and three are correct options, but two hours, thirty hours and four days aren't.
@@ -22,7 +22,22 @@ Run the following command:
     
 ## API Documentation
 
-    http://localhost:8080/swagger-ui.html
+The Doucmentation API was created using Postman. Here is the link to access to:
+
+    https://documenter.getpostman.com/view/4683377/S11GQem5
+    
+Anybody is able to open the documentatoin using postman and test the endpoints (First, should to start the API).
+
+## Testing
+
+### Integration tests
+
+The integration tests are in src/test/java.
+
+### Concurrency tests
+
+There is a JMETER file, located in src/test/resources, named concurrency-test.jmx, to test the concurrency features of API.
+ 
     
 ## Building
 
