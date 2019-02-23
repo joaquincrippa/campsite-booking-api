@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.upgrade</groupId>
 	<artifactId>campsite-booking-api</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0-RC</version>
 	<name>Campsite Booking API</name>
 	<description>REST API service to manage camping reservations</description>
 
