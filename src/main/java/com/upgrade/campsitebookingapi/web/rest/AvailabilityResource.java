@@ -43,7 +43,7 @@ public class AvailabilityResource {
     /**
      * GET  /availabilities : Find out when the campsite is available.
      *
-     * @param from @description the minimum date
+     * @param from the minimum date
      * @param until the maximum date
      * @param onlyAvailable the number of available places has to be greater than 0  
      * @param pageable the pagination information
@@ -54,14 +54,12 @@ public class AvailabilityResource {
 			@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate from,
 			@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate until,
 			Boolean onlyAvailable, Pageable pageable) {
-
-		log.info("REST request to get Availabilities: from: {}, until: {}, onlyAvailable: {}, page: {}",
+		log.debug("REST request to get Availabilities: from: {}, until: {}, onlyAvailable: {}, page: {}",
 				from, until, onlyAvailable, pageable);
 		try {
 			Page <AvailabilityDTO> page = availabilityService
-					.find(from, until, onlyAvailable, pageable)
+					.search(from, until, onlyAvailable, pageable)
 					.map(availabilityMapper::toDto);
-			
 			HttpHeaders headers = generatePaginationHttpHeaders(page, "/api/availabilities");
 			return ResponseEntity.ok().headers(headers).body(page.getContent());			
 		} catch (IllegalArgumentException exc) {
@@ -70,7 +68,6 @@ public class AvailabilityResource {
 	}
 	
     private <T> HttpHeaders generatePaginationHttpHeaders(Page<T> page, String baseUrl) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.add("total-count", Long.toString(page.getTotalElements()));
         headers.add("current-page", Integer.toString(page.getNumber()));
