@@ -63,17 +63,27 @@ public class BookingResource {
 	}
 	
     /**
-     * PUT  /bookings/:id : Updates an existing booking.
+     * PUT  /bookings/:id : Update an existing booking.
      *
      * @param bookingDTO the bookingDTO to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated bookingDTO,
      * or with status 400 (Bad Request) if the bookingDTO is not valid,
+     * or with status 404 (Not Found) if the resource does not exist,
      * or with status 500 (Internal Server Error) if the bookingDTO couldn't be updated
      */
 	@PutMapping("/bookings/{id}")
-	public ResponseEntity<BookingDTO> updateBooking(@PathVariable Long id, @Valid @RequestBody BookingDTO bookingDTO) {
-		
-		return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+	public ResponseEntity<Object> updateBooking(@PathVariable Long id, @Valid @RequestBody BookingDTO bookingDTO) {
+		log.debug("REST request to create Booking : {}", bookingDTO);
+		try {
+			BookingDTO result = bookingMapper.toDto(bookingService.update(id, bookingDTO));
+			return ResponseEntity.status(HttpStatus.OK).body(result);
+		} catch (IllegalArgumentException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		} catch (NotFoundException e) {
+			log.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
 	}
 
     /**

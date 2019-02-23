@@ -15,6 +15,8 @@ import com.upgrade.campsitebookingapi.repository.BookingRepository;
 import com.upgrade.campsitebookingapi.web.rest.dto.BookingDTO;
 import com.upgrade.campsitebookingapi.web.rest.mapper.BookingMapper;
 
+import javassist.NotFoundException;
+
 @Service
 public class BookingService {
 	
@@ -54,6 +56,43 @@ public class BookingService {
 	}
 
 	/**
+	 * Update an existing booking and update the news in the availabilities of previous 
+	 * and current booking days. 
+	 * The existing booking must not be active (the arrivalDate has to be after today).
+	 * For validations about the booking data to update, @see the {@link #checkValidations(BookingDTO)} method.
+	 *
+	 * @param id the id of an existing entity
+	 * @param bookingDTO 
+	 * @return the updated booking
+	 */
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	public Booking update(Long id, BookingDTO bookingDTO) throws NotFoundException, IllegalArgumentException {
+		Optional<Booking> optBooking = bookingRepository.findById(id);
+		if(!optBooking.isPresent()) {
+			throw new NotFoundException("The booking does not exist");
+		}
+		checkValidations(bookingDTO);
+		Booking oldBooking = optBooking.get();
+		/* Check if booking is not active */
+		if (oldBooking.getArrivalDate().isBefore(LocalDate.now())) {
+			throw new IllegalArgumentException("The booking is active, so it can't be updated");
+		}
+		Booking updatedBooking = bookingMapper.toEntity(bookingDTO);
+		updatedBooking.setId(id);
+		LocalDate minDate = oldBooking.getArrivalDate().isAfter(updatedBooking.getArrivalDate()) ?
+				updatedBooking.getArrivalDate() : oldBooking.getArrivalDate();
+		LocalDate maxDate = oldBooking.getDepartureDate().isBefore(updatedBooking.getDepartureDate()) ?
+				updatedBooking.getDepartureDate() : oldBooking.getDepartureDate();
+		/* Find the availability for every days between min and max date */
+		List <Availability> availabilities = availabilityRepository.findByDateBetween(
+				minDate, maxDate);
+		rollbackBooking(oldBooking, availabilities);
+		checkAvailabilities(updatedBooking, availabilities);
+		availabilityRepository.saveAll(availabilities);
+		return bookingRepository.save(updatedBooking);
+	}
+	
+	/**
 	 * Check the following validations:
 	 * 1. departureDate must not be later than one year.
 	 * 2. departureDate has to be after arrivalDate.
@@ -75,6 +114,31 @@ public class BookingService {
 		if (!bookingDTO.getArrivalDateAsLocalDate().isAfter(LocalDate.now())) {
 			throw new IllegalArgumentException("arrivalDate has to be after today");
 		}
+	}
+	
+	/**
+	 * Undo changes of a booking in availabilities.
+	 * From arrivalDate until departureDate, add "people" value to availability value for each day. 
+	 * 
+	 * @param oldBooking the booking to rollback
+	 * @param availabilities the affected availabilities
+	 * @return the updated availabilities
+	 */
+	private List<Availability> rollbackBooking(Booking oldBooking, List <Availability> availabilities) {
+		/* For each day, rollback the availability considering the people of the booking */
+		LocalDate currentDate = oldBooking.getArrivalDate();
+		while (currentDate.isBefore(oldBooking.getDepartureDate())) {
+			final LocalDate currentDateAux = currentDate;
+			Optional<Availability> currentAv = availabilities.stream()
+					.filter((Availability av) -> av.getDate().equals(currentDateAux))
+					.findFirst();			
+			if (!currentAv.isPresent()) {
+				throw new IllegalArgumentException("An error occurred. An availability couldn't be found.");
+			}
+			currentAv.get().setValue(currentAv.get().getValue() + oldBooking.getPeople());
+			currentDate = currentDate.plusDays(1L);
+		}
+		return availabilities;
 	}
 	
 	/**
