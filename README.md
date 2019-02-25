@@ -22,11 +22,11 @@ Run the following command:
     
 ## API Documentation
 
-The Doucmentation API was created using Postman. Here is the link to access to:
+The Documentation API was created using Postman. Here is the link to access to:
 
     https://documenter.getpostman.com/view/4683377/S11GRKa8
     
-Anybody is able to open the documentatoin using postman and test the endpoints (First, should to start the API).
+Anybody is able to open the documentatoin using postman and test the endpoints (First, should start the API).
 
 ## Testing
 
